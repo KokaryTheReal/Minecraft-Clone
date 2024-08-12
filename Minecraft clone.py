@@ -1,3 +1,4 @@
+import math
 import ctypes
 import pyglet
 
@@ -7,20 +8,21 @@ pyglet.options["debug_gl"] = False
 import pyglet.gl as gl
 
 import shader
+import matrix
 
 vertex_positions = [
     -0.5,
     0.5,
-    1.0,
+    0.0,
     -0.5,
     -0.5,
-    1.0,
+    0.0,
     0.5,
     -0.5,
-    1.0,
+    0.0,
     0.5,
     0.5,
-    1.0,
+    0.0,
 ]
 
 indices = [
@@ -63,12 +65,34 @@ class Window(pyglet.window.Window):
             gl.GL_ELEMENT_ARRAY_BUFFER,
             ctypes.sizeof(gl.GLuint * len(indices)),
             (gl.GLuint * len(indices))(*indices),
-            gl.GL_STATIC_DRAW)
+            gl.GL_STATIC_DRAW,
+        )
 
         self.shader = shader.Shader("vert.glsl", "frag.glsl")
+        self.shader_matrix_location = self.shader.find_uniform(b"matrix")  # get the shader matrix uniform location
         self.shader.use()
 
+        self.mv_matrix = matrix.Matrix()
+        self.p_matrix = matrix.Matrix()
+
+        self.x = 0
+        pyglet.clock.schedule_interval(self.update, 1.0 / 60)  # call update function every 60th of a second
+
+    def update(self, delta_time):
+        self.x += delta_time
+
     def on_draw(self):
+
+        self.p_matrix.load_identity()
+        self.p_matrix.perspective(90, float(self.width) / self.height, 0.1, 500)
+
+        self.mv_matrix.load_identity()
+        self.mv_matrix.translate(0, 0, -1)
+        self.mv_matrix.rotate_2d(self.x + 6.28 / 4, math.sin(self.x / 3 * 2) / 2)
+
+        mvp_matrix = self.p_matrix * self.mv_matrix
+        self.shader.uniform_matrix(self.shader_matrix_location, mvp_matrix)
+
         gl.glClearColor(0.0, 0.0, 0.0, 1.0)
         self.clear()
 

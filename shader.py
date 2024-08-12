@@ -1,11 +1,9 @@
 import ctypes
 import pyglet.gl as gl
 
-
-class Shader_error(Exception):
+class ShaderError(Exception):
     def __init__(self, message):
         self.message = message
-
 
 def create_shader(target, source_path):
     source_file = open(source_path, "rb")
@@ -29,8 +27,7 @@ def create_shader(target, source_path):
     gl.glGetShaderInfoLog(target, log_length, None, log_buffer)
 
     if log_length.value > 1:
-        raise Shader_error(str(log_buffer.value))
-
+        raise ShaderError(str(log_buffer.value))
 
 class Shader:
     def __init__(self, vert_path, frag_path):
@@ -51,6 +48,14 @@ class Shader:
 
     def __del__(self):
         gl.glDeleteProgram(self.program)
+
+    def find_uniform(self, name):
+        if isinstance(name, str):
+            name = name.encode()
+        return gl.glGetUniformLocation(self.program, ctypes.create_string_buffer(name))
+
+    def uniform_matrix(self, location, matrix):
+        gl.glUniformMatrix4fv(location, 1, gl.GL_FALSE, (gl.GLfloat * 16)(*sum(matrix.data, [])))
 
     def use(self):
         gl.glUseProgram(self.program)
