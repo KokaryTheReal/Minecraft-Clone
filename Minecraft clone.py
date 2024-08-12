@@ -6,6 +6,8 @@ pyglet.options["debug_gl"] = False
 
 import pyglet.gl as gl
 
+import shader
+
 vertex_positions = [
     -0.5,
     0.5,
@@ -61,17 +63,21 @@ class Window(pyglet.window.Window):
             gl.GL_ELEMENT_ARRAY_BUFFER,
             ctypes.sizeof(gl.GLuint * len(indices)),
             (gl.GLuint * len(indices))(*indices),
-            gl.GL_STATIC_DRAW,
-        )
+            gl.GL_STATIC_DRAW)
+
+        self.shader = shader.Shader("vert.glsl", "frag.glsl")
+        self.shader.use()
 
     def on_draw(self):
-        gl.glClearColor(1.0, 0.5, 1.0, 1.0)
+        gl.glClearColor(0.0, 0.0, 0.0, 1.0)
         self.clear()
+
         gl.glDrawElements(gl.GL_TRIANGLES, len(indices), gl.GL_UNSIGNED_INT, None)
 
     def on_resize(self, width, height):
         print(f"Resize {width} * {height}")
         gl.glViewport(0, 0, width, height)
+
 
 class Game:
     def __init__(self):
